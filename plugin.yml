@@ -1,0 +1,9 @@
+name: PocketBans
+main: ProjectInfinity\PocketBans\PocketBans
+version: '1.0.0-Beta'
+api: [3.0.0-ALPHA9, 3.0.0-ALPHA10]
+author: ProjectInfinity
+permissions:
+  pocketbans.admin:
+    description: "Gives the player access to all commands"
+    default: op

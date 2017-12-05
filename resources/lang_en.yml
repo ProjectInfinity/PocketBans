@@ -1,0 +1,10 @@
+no_permission: '%red%[PocketBans] You do not have permission to do that.'
+not_enough_args: '%red%[PocketBans] Not enough arguments. Usage: %s'
+no_reason: 'No reason provided'
+kick:
+  player_offline: '%red%[PocketBans] The target player is offline.'
+  message: '%red%Kicked: %s'
+  result_multi: '%yellow%[PocketBans] Kicked %s players.'
+  broadcast: '%yellow%[PocketBans] %green%%s %yellow%kicked %red%%s%yellow%: %s'
+exempt:
+  kick: '%yellow%[PocketBans] %s is exempted from being kicked.'

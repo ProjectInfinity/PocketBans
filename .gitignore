@@ -1,0 +1,6 @@
+
+\.idea/
+
+cacert\.pem
+/config.yml
+/lang_*.yml

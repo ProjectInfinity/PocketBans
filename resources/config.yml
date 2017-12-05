@@ -1,0 +1,10 @@
+version: 1
+language: 'en'
+mysql:
+  enabled: false
+  host: 'localhost'
+  port: 3306
+  username: 'pocketvote'
+  password: 'pocketvote'
+  database: 'pocketvote'
+  prefix: ''
