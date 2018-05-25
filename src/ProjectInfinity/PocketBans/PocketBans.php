@@ -14,6 +14,11 @@ class PocketBans extends PluginBase {
     public static $dev, $cert;
 
     public function onEnable() {
+        if(!$this->getServer()->getOnlineMode()) {
+            $this->getLogger()->critical('PocketBans is intended for online-mode/xbox-auth servers ONLY!');
+            $this->getPluginLoader()->disablePlugin($this);
+            return;
+        }
         self::$plugin = $this;
         $this->saveDefaultConfig();
         self::$dev = $this->getConfig()->get('dev') === true;
