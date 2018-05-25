@@ -3,13 +3,17 @@
 namespace ProjectInfinity\PocketBans;
 
 use pocketmine\plugin\PluginBase;
+use ProjectInfinity\PocketBans\cmd\BanCommand;
 use ProjectInfinity\PocketBans\cmd\KickCommand;
 use ProjectInfinity\PocketBans\lang\MessageHandler;
+use ProjectInfinity\PocketBans\util\BanManager;
 
 class PocketBans extends PluginBase {
 
     /** @var PocketBans $plugin */
     private static $plugin;
+    /** @var BanManager $banManager */
+    private $banManager;
 
     public static $dev, $cert;
 
@@ -57,6 +61,7 @@ class PocketBans extends PluginBase {
         }
 
         MessageHandler::init();
+        $this->banManager = new BanManager($this);
 
         # Unregister default commands.
         $this->unregisterCommands([
@@ -69,12 +74,14 @@ class PocketBans extends PluginBase {
 
         # Register our commands.
         $this->getServer()->getCommandMap()->register('pb', new KickCommand($this));
+        $this->getServer()->getCommandMap()->register('pb', new BanCommand($this));
     }
 
     public function onDisable() {
         self::$plugin = null;
         self::$dev = null;
         self::$cert = null;
+        unset($this->banManager);
     }
 
     private function unregisterCommands(array $commands) {
@@ -89,5 +96,9 @@ class PocketBans extends PluginBase {
 
     public static function getPlugin(): PocketBans {
         return self::$plugin;
+    }
+
+    public function getBanManager(): BanManager {
+        return $this->banManager;
     }
 }

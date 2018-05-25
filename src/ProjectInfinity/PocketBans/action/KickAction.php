@@ -27,7 +27,7 @@ class KickAction {
         $this->run();
     }
 
-    public function run(): void {
+    private function run(): void {
         # Check if the player is online before continuing.
         if(!$this->kickAll && $this->plugin->getServer()->getPlayer($this->target) === null) {
             Message::send($this->sender, 'kick.player_offline');
@@ -56,7 +56,7 @@ class KickAction {
             Message::send($this->sender, 'kick.player_offline');
             return;
         }
-        $targetName = $target->getDisplayName();
+        $targetName = $target->getName();
         $target->kick(Message::get('kick.message', $this->reason ?? Message::get('no_reason')), false);
         $this->plugin->getServer()->broadcastMessage(Message::get('kick.broadcast', [$this->sender->getName(), $targetName, $this->reason ?? Message::get('no_reason')]));
         # TODO: Figure out if we have to send our own kick event here.
