@@ -83,15 +83,16 @@ class Ban {
     }
 
     public function toArray(): array {
-        return [
+        $arr = [
             'name' => $this->name,
+            'xuid' => $this->xuid,
             'type' => $this->type,
-            'banned_by' => $this->banned_by,
             'reason' => $this->reason,
-            'expires' => $this->expires,
-            'created' => $this->created,
-            'xuid' => $this->xuid
+            'banned_by' => $this->banned_by,
+            'created' => $this->created
         ];
+        if($this->getType() === BanType::TEMP) $arr['expires'] = $this->expires;
+        return $arr;
     }
 
 }
