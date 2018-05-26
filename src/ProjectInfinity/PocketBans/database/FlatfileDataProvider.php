@@ -78,10 +78,9 @@ class FlatfileDataProvider extends DataProvider {
                 'perm' => array_merge($this->bans[BanType::GLOBAL], $this->bans[BanType::LOCAL]),
                 'temp' => $this->bans[BanType::TEMP]
             ]
-        ]));
+        ], PocketBans::$dev ? JSON_PRETTY_PRINT : 0));
     }
 
-    /** Ban related */
     public function getBans(): array {
         return [
             BanType::TEMP => $this->bans[BanType::TEMP],
