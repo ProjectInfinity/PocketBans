@@ -34,33 +34,26 @@ class BanCommand extends Command implements PluginIdentifiableCommand {
         }
 
         $target = $args[0];
-        $force = false;
         $reason = null;
 
         if(\count($args) > 1) {
-            if($args[\count($args) - 1] === '--force') $force = true;
-            if($force) {
-                unset($args[\count($args) - 1], $args[0]);
-                \count($args) > 0 ? $reason = implode(' ', $args) : null;
-            } else {
-                unset($args[0]);
-                $reason = implode(' ', $args);
-            }
+            unset($args[0]);
+            $reason = implode(' ', $args);
         }
 
         $targetPlayer = $this->getPlugin()->getServer()->getOfflinePlayer($target);
-        if(!$force && !$targetPlayer->hasPlayedBefore()) {
+        if(!$targetPlayer->hasPlayedBefore()) {
             Message::send($sender, 'player_not_found', [$target]);
             return true;
         }
 
-        $userStatus = $this->bm->isBanned($targetPlayer === null ? $target : $targetPlayer->getName());
+        $userStatus = $this->bm->isBanned($targetPlayer->getXuid());
         if($userStatus > BanType::TEMP) {
-            Message::send($sender, 'ban.already_banned', [$target]);
+            Message::send($sender, 'ban.already_banned', [$targetPlayer->getName()]);
             return true;
         }
 
-        new BanAction($target, $reason, BanType::LOCAL, $sender);
+        new BanAction($targetPlayer, $reason, BanType::LOCAL, $sender);
 
         return true;
     }
