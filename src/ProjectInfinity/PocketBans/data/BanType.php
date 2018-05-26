@@ -7,7 +7,6 @@ class BanType {
     public const TEMP = 1;
     public const LOCAL = 2;
     public const GLOBAL = 3;
-    public const PERM = 4;
 
     public static function getNameByValue($value) {
         $class = new \ReflectionClass(__CLASS__);

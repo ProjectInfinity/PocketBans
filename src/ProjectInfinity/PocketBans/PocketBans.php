@@ -17,7 +17,7 @@ class PocketBans extends PluginBase {
 
     public static $dev, $cert;
 
-    public function onEnable() {
+    public function onEnable(): void {
         if(!$this->getServer()->getOnlineMode()) {
             $this->getLogger()->critical('PocketBans is intended for online-mode/xbox-auth servers ONLY!');
             $this->getPluginLoader()->disablePlugin($this);
@@ -77,14 +77,15 @@ class PocketBans extends PluginBase {
         $this->getServer()->getCommandMap()->register('pb', new BanCommand($this));
     }
 
-    public function onDisable() {
+    public function onDisable(): void {
+        $this->banManager->shutdown();
         self::$plugin = null;
         self::$dev = null;
         self::$cert = null;
         unset($this->banManager);
     }
 
-    private function unregisterCommands(array $commands) {
+    private function unregisterCommands(array $commands): void {
         foreach($commands as $command) {
             $commandMap = $this->getServer()->getCommandMap();
             $cmd = $commandMap->getCommand($command);

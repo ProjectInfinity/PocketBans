@@ -12,7 +12,7 @@ use ProjectInfinity\PocketBans\PocketBans;
 class BanManager {
 
     private $plugin;
-    private $db;
+    private $provider;
     private $bans;
 
     public function __construct(PocketBans $plugin) {
@@ -24,15 +24,18 @@ class BanManager {
             case 'file':
             case 'json':
             case 'flatfile':
-                $this->db = new FlatfileDataProvider();
+                $this->provider = new FlatfileDataProvider();
                 break;
 
             default:
                 $plugin->getLogger()->warning("The specified provider '{$plugin->getConfig()->get('provider')}' is invalid, defaulting to flatfile.");
-                $this->db = new FlatfileDataProvider();
+                $this->provider = new FlatfileDataProvider();
         }
-        $this->db = $plugin->getConfig()->getNested('mysql.enabled', false) ? new MysqlDataProvider() : new SqliteDataProvider();
-        $this->bans = $this->db->getBans();
+        $this->bans = $this->provider->getBans();
+    }
+
+    public function shutdown(): void {
+        $this->provider->close();
     }
 
     /**
@@ -81,8 +84,8 @@ class BanManager {
         $ban = null;
 
         # Check database too if using SQLite if a ban wasn't found in cache.
-        if($ban === null && $this->db instanceof SqliteDataProvider) {
-            $ban = $this->db->getBan($player);
+        if($ban === null && $this->provider instanceof SqliteDataProvider) {
+            $ban = $this->provider->getBan($player);
         }
 
         return $ban;
@@ -102,7 +105,7 @@ class BanManager {
             $created
         );
 
-        $result = $this->db->ban($ban);
+        $result = $this->provider->ban($ban);
 
         if($result) {
             $this->bans[$type][$player] = new Ban(

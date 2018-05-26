@@ -1,10 +1,17 @@
 no_permission: '%red%[PocketBans] You do not have permission to do that.'
 not_enough_args: '%red%[PocketBans] Not enough arguments. Usage: %s'
 no_reason: 'No reason provided'
+player_not_found: '%red%[PocketBans] The player "%s" has not played here. Add --force to the end of the command to ban anyway.'
 kick:
   player_offline: '%red%[PocketBans] The target player is offline.'
-  message: '%red%Kicked: %s'
+  message: '%red%You were kicked: %s'
   result_multi: '%yellow%[PocketBans] Kicked %s players.'
   broadcast: '%yellow%[PocketBans] %green%%s %yellow%kicked %red%%s%yellow%: %s'
+ban:
+  message: '%red%You were banned: %s'
+  broadcast: '%yellow%[PocketBans] %green%%s %yellow%banned %red%%s%yellow%: %s'
+  failure: '%red%Failed to ban %s'
+  already_banned: '%red%[PocketBans] %s is already banned.'
 exempt:
   kick: '%yellow%[PocketBans] %s is exempted from being kicked.'
+  ban:  '%yellow%[PocketBans] %s is exempted from being banned.'
