@@ -26,4 +26,8 @@ class PermissionHandler {
     public static function canKickAll(CommandSender $sender): bool {
         return $sender->hasPermission(Permissions::KICK_ALL);
     }
+
+    public static function isExempted(CommandSender $sender, $isBan = false): bool {
+        return $sender->hasPermission($isBan ? Permissions::EXEMPT_BAN : Permissions::EXEMPT_KICK);
+    }
 }
