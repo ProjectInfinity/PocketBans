@@ -4,3 +4,5 @@
 cacert\.pem
 /config.yml
 /lang_*.yml
+bans.json
+xuid.json
