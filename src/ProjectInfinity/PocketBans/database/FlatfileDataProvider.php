@@ -5,21 +5,24 @@ namespace ProjectInfinity\PocketBans\database;
 use ProjectInfinity\PocketBans\data\Ban;
 use ProjectInfinity\PocketBans\data\BanType;
 use ProjectInfinity\PocketBans\PocketBans;
+use ProjectInfinity\PocketBans\util\ToolBox;
 
 class FlatfileDataProvider extends DataProvider {
 
     private $plugin;
     private $bans = [BanType::TEMP => [], BanType::GLOBAL => [], BanType::LOCAL => []];
     private $history = [];
+    private $xuidCache = [];
 
     public function __construct() {
         $this->plugin = PocketBans::getPlugin();
         $this->plugin->getLogger()->info('Using flatfile provider.');
-        $decoded = json_decode($this->loadFile(), true);
+
+        $decoded = json_decode($this->loadBansFile(), true);
         if($decoded === null) {
             $this->plugin->getLogger()->error('Failed to decode bans.json! File is being moved to bans.json.bak and a new file is being created.');
             rename($this->plugin->getDataFolder().'/bans.json', $this->plugin->getDataFolder().'/bans.json.bak');
-            $this->createFile();
+            $this->createBansFile();
         }
 
         foreach($decoded['bans']['perm'] as $perm) {
@@ -32,14 +35,28 @@ class FlatfileDataProvider extends DataProvider {
             $this->bans[$temp['type']][] = $temp;
         }
 
+        $decoded = json_decode($this->loadXuidCache(), true);
+
+        if($decoded === null) {
+            $this->plugin->getLogger()->error('Failed to decode xuid.json! File is being moved to xuid.json.bak and a new file is being created.');
+            rename($this->plugin->getDataFolder().'/xuid.json', $this->plugin->getDataFolder().'/xuid.json.bak');
+            $this->createXuidCache();
+        }
+
+        foreach($decoded as $key => $value) {
+            $this->xuidCache[$value['name']] = (object) ['xuid' => $value['xuid'], 'score' => $value['score'], 'name' => $value['name']];
+        }
+
+        $this->xuidCleanup();
+
         //var_dump($this->bans);
         // TODO: Add history support.
     }
 
-    private function loadFile(): ?String {
+    private function loadBansFile(): ?String {
         if(!file_exists($this->plugin->getDataFolder().'/bans.json')) {
             $this->plugin->getLogger()->info('Couldn\'t find bans.json, creating it.');
-            $this->createFile();
+            $this->createBansFile();
         }
         $handle = fopen($this->plugin->getDataFolder().'/bans.json', 'rb');
 
@@ -56,7 +73,7 @@ class FlatfileDataProvider extends DataProvider {
         return null;
     }
 
-    private function createFile(): void {
+    private function createBansFile(): void {
         file_put_contents($this->plugin->getDataFolder().'/bans.json', json_encode([
             'history' => [],
             'bans' => [
@@ -66,12 +83,42 @@ class FlatfileDataProvider extends DataProvider {
         ]));
     }
 
-    public function close(): void {
-        $this->save();
-        $this->plugin->getLogger()->info('Saved bans to disk.');
+    private function loadXuidCache(): ?String {
+        if(!file_exists($this->plugin->getDataFolder().'/xuid.json')) {
+            $this->plugin->getLogger()->info('Couldn\'t find xuid.json, creating it.');
+            $this->createXuidCache();
+        }
+        $handle = fopen($this->plugin->getDataFolder().'/xuid.json', 'rb');
+
+        if($handle) {
+            $content = '';
+            while(($line = fgets($handle)) !== false) {
+                $content .= $line;
+            }
+            fclose($handle);
+            return $content;
+        }
+
+        $this->plugin->getLogger()->error('Failed to open xuid.json!');
+        return null;
     }
 
-    private function save(): void {
+    private function createXuidCache(): void {
+        file_put_contents($this->plugin->getDataFolder().'/xuid.json', json_encode([]));
+    }
+
+    private function xuidCleanup(): void {
+        if(\count($this->xuidCache) <= $this->plugin->getConfig()->getNested('cache.xuid.max', 5000)) return;
+        $temp = ToolBox::xuidQuickSort(array_values($this->xuidCache));
+        $this->xuidCache = array_splice($temp, 0, $this->plugin->getConfig()->getNested('cache.xuid.max', 5000));
+        }
+
+    public function close(): void {
+        $this->save(true);
+        $this->plugin->getLogger()->info('Saved bans and xuid cache to disk.');
+    }
+
+    private function save($isShutdown = false): void {
         file_put_contents($this->plugin->getDataFolder().'/bans.json', json_encode([
             'history' => $this->history,
             'bans' => [
@@ -79,6 +126,8 @@ class FlatfileDataProvider extends DataProvider {
                 'temp' => $this->bans[BanType::TEMP]
             ]
         ], PocketBans::$dev ? JSON_PRETTY_PRINT : 0));
+
+        if($isShutdown) file_put_contents($this->plugin->getDataFolder().'/xuid.json', json_encode(array_values($this->xuidCache), PocketBans::$dev ? JSON_PRETTY_PRINT : 0));
     }
 
     public function getBans(): array {
@@ -107,5 +156,14 @@ class FlatfileDataProvider extends DataProvider {
         if($save) $this->save();
         // TODO: Store history.
         return \count($this->bans[$ban->getType()]) > $before;
+    }
+
+    public function storeXuid(string $player, string $xuid): void {
+        if(!isset($this->xuidCache[$player])) $this->xuidCache[$player] = ['xuid' => $xuid, 'score' => 0];
+        $new = $this->xuidCache[$player];
+        $new['score']++;
+        $new['xuid'] = $xuid;
+        $this->xuidCache[$player] = $new;
+        $this->plugin->getLogger()->debug('Cached player ('.$player.', '.$xuid.', '.$new['score'].')');
     }
 }

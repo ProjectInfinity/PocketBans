@@ -13,4 +13,5 @@ abstract class DataProvider {
     abstract public function getBan(string $player): ?Ban;
     abstract public function ban(Ban $ban): bool;
 
+    abstract public function storeXuid(string $player, string $xuid): void;
 }
