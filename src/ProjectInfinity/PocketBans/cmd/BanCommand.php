@@ -47,13 +47,20 @@ class BanCommand extends Command implements PluginIdentifiableCommand {
             return true;
         }
 
-        $userStatus = $this->bm->isBanned($targetPlayer->getXuid());
+        if($targetPlayer->getXuid() === '' && !$this->bm->getProvider()->hasXuidCache($target)) {
+            Message::send($sender, 'ban.failure', $target);
+            return true;
+        }
+
+        $xuid = $targetPlayer->getXuid() !== '' ? $targetPlayer->getXuid() : $this->bm->getProvider()->getXuidCache($targetPlayer->getName());
+
+        $userStatus = $this->bm->isBanned($xuid);
         if($userStatus > BanType::TEMP) {
             Message::send($sender, 'ban.already_banned', [$targetPlayer->getName()]);
             return true;
         }
 
-        new BanAction($targetPlayer, $reason, BanType::LOCAL, $sender);
+        new BanAction($targetPlayer, $xuid, $reason, BanType::LOCAL, $sender);
 
         return true;
     }
