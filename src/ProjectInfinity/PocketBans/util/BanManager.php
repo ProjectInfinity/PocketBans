@@ -4,9 +4,8 @@ namespace ProjectInfinity\PocketBans\util;
 
 use ProjectInfinity\PocketBans\data\Ban;
 use ProjectInfinity\PocketBans\data\BanType;
+use ProjectInfinity\PocketBans\database\DataProvider;
 use ProjectInfinity\PocketBans\database\FlatfileDataProvider;
-use ProjectInfinity\PocketBans\database\MysqlDataProvider;
-use ProjectInfinity\PocketBans\database\SqliteDataProvider;
 use ProjectInfinity\PocketBans\PocketBans;
 
 class BanManager {
@@ -38,6 +37,14 @@ class BanManager {
         $this->provider->close();
     }
 
+    public function getProvider(): DataProvider {
+        return $this->provider;
+    }
+
+    public function cacheXuid(string $player, string $xuid): void {
+        $this->provider->storeXuid($player, $xuid);
+    }
+
     /**
      * TODO feature list for BanManager.
      * - Log bans, unbans, kicks etc.
@@ -50,15 +57,15 @@ class BanManager {
      *
      * Returns a integer referencing the type of ban or 0 if not banned.
      *
-     * @param string $player
+     * @param string $xuid
      * @param bool $includeTemp
      * @param bool $checkDatabase
      * @return int
      */
-    public function isBanned(string $player, $includeTemp = true, $checkDatabase = false): int {
-        if(isset($this->bans[BanType::LOCAL][$player])) return BanType::LOCAL;
-        if(isset($this->bans[BanType::GLOBAL][$player])) return BanType::GLOBAL;
-        if($includeTemp && isset($this->bans[BanType::TEMP][$player])) return BanType::TEMP;
+    public function isBanned(string $xuid, $includeTemp = true, $checkDatabase = false): int {
+        if(isset($this->bans[BanType::LOCAL][$xuid])) return BanType::LOCAL;
+        if(isset($this->bans[BanType::GLOBAL][$xuid])) return BanType::GLOBAL;
+        if($includeTemp && isset($this->bans[BanType::TEMP][$xuid])) return BanType::TEMP;
         # TODO: Do something with $checkDatabase.
         return 0;
     }
@@ -81,7 +88,7 @@ class BanManager {
             $ban = $this->bans[BanType::GLOBAL][$player] ?? $this->bans[BanType::LOCAL] ?? $this->bans[BanType::TEMP] ?? null;
         }
         # TODO: IF null, check database.
-        $ban = null;
+        //$ban = null;
 
         # Check database too if using SQLite if a ban wasn't found in cache.
         if($ban === null && $this->provider instanceof SqliteDataProvider) {
@@ -101,6 +108,7 @@ class BanManager {
             $type,
             $sender,
             $reason,
+            $xuid,
             $expires,
             $created
         );
@@ -113,6 +121,7 @@ class BanManager {
                 $type,
                 $sender,
                 $reason,
+                $xuid,
                 $expires,
                 $created
             );
