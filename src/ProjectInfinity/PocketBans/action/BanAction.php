@@ -3,6 +3,7 @@
 namespace ProjectInfinity\PocketBans\action;
 
 use pocketmine\command\CommandSender;
+use pocketmine\Player;
 use ProjectInfinity\PocketBans\lang\Message;
 use ProjectInfinity\PocketBans\permission\PermissionHandler;
 use ProjectInfinity\PocketBans\PocketBans;
@@ -10,17 +11,18 @@ use ProjectInfinity\PocketBans\PocketBans;
 class BanAction {
 
     private $plugin;
-    private $target;
+    private $targetPlayer;
+    private $targetXuid;
     private $reason;
     private $type;
     private $sender;
     private $manager;
 
-    public function __construct(string $target, ?string $reason, int $type, CommandSender $sender) {
+    public function __construct(Player $targetPlayer, String $xuid, ?string $reason, int $type, CommandSender $sender) {
         $this->plugin = PocketBans::getPlugin();
         $this->manager = $this->plugin->getBanManager();
-
-        $this->target = $target;
+        $this->targetPlayer = $targetPlayer;
+        $this->targetXuid = $xuid;
         $this->reason = $reason ?? Message::get('no_reason');
         $this->type = $type;
         $this->sender = $sender;
@@ -29,26 +31,22 @@ class BanAction {
     }
 
     private function run(): void {
-        $targetPlayer = $this->plugin->getServer()->getPlayer($this->target);
-        #$this->plugin->getServer()->getNameBans()->addBan();
-
         # Kick the player if online and show a ban message.
-        if($targetPlayer !== null) {
-            $this->target = $targetPlayer->getName();
+        if($this->targetPlayer->isOnline()) {
             # Check if the player is exempted before continuing.
-            if(PermissionHandler::isExempted($targetPlayer, true)) {
-                Message::send($this->sender, 'exempt.ban', [$this->target]);
+            if(PermissionHandler::isExempted($this->targetPlayer, true)) {
+                Message::send($this->sender, 'exempt.ban', [$this->targetPlayer->getName()]);
                 return;
             }
-            $targetPlayer->kick(Message::get('ban.message', [$this->reason]), false);
+            $this->targetPlayer->kick(Message::get('ban.message', [$this->reason]), false);
         }
 
-        if(!$this->manager->banPlayer($this->target, $this->reason, $targetPlayer->getXuid(), $this->type, $this->sender->getName())) {
-            Message::send($this->sender, 'ban.failure', [$this->target]);
+        if(!$this->manager->banPlayer($this->targetPlayer->getName(), $this->reason, $this->targetXuid, $this->type, $this->sender->getName())) {
+            Message::send($this->sender, 'ban.failure', [$this->targetPlayer->getName()]);
             return;
         }
 
         # TODO: Figure out if we have to send our own ban event here.
-        $this->plugin->getServer()->broadcastMessage(Message::get('ban.broadcast', [$this->sender->getName(), $this->target, $this->reason]));
+        $this->plugin->getServer()->broadcastMessage(Message::get('ban.broadcast', [$this->sender->getName(), $this->targetPlayer->getName(), $this->reason]));
     }
 }
